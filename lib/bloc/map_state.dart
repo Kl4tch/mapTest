@@ -5,10 +5,11 @@ sealed class MapState {}
 
 class MapInitial extends MapState {}
 class MapCalculated extends MapState {
-  MapCalculated(this.x, this.y);
+  MapCalculated(this.x, this.y, this.url);
 
   final int x;
   final int y;
+  final String url;
 }
 class MapError extends MapState {
   MapError(this.title);

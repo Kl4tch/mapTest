@@ -4,3 +4,4 @@ part of 'map_bloc.dart';
 sealed class MapEvent {}
 class StartEvent implements MapEvent {}
 class InitEvent implements MapEvent {}
+class DismissEvent implements MapEvent {}

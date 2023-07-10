@@ -40,14 +40,16 @@ class WindowWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text("Карты")),
-      body: BlocBuilder<MapBloc, MapState>(
-          builder: (context, state) {
-            return switch (state) {
-              MapInitial _ => const _FormWidget(),
-              MapCalculated s => _CalculatedWidget(state: s),
-              MapError e => Text(e.title)
-            };
-          }
+      body: Center(
+        child: BlocBuilder<MapBloc, MapState>(
+            builder: (context, state) {
+              return switch (state) {
+                MapInitial _ => const _FormWidget(),
+                MapCalculated s => _CalculatedWidget(state: s),
+                MapError e => _ErrorWidget(state: e)
+              };
+            }
+        )
       )
     );
   }
@@ -64,6 +66,27 @@ class _CalculatedWidget extends StatelessWidget {
         const _FormWidget(),
         Text("x = ${state.x}"),
         Text("y = ${state.y}"),
+        Image.network(state.url),
+      ],
+    );
+  }
+}
+
+class _ErrorWidget extends StatelessWidget {
+  const _ErrorWidget({super.key, required this.state});
+  final MapError state;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Text(state.title),
+        FilledButton(
+          onPressed: () {
+            context.read<MapBloc>().add(DismissEvent());
+          },
+          child: const Text('Ок'),
+        )
       ],
     );
   }
@@ -76,8 +99,7 @@ class _FormWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final bloc = context.read<MapBloc>();
-    return Center(
-        child: SizedBox(
+    return SizedBox(
             width: 300,
             child: Card(
                 child: Padding(
@@ -123,8 +145,7 @@ class _FormWidget extends StatelessWidget {
                     )
                 )
             )
-        )
-    );
+        );
   }
 }
 
