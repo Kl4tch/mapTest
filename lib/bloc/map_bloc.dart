@@ -1,9 +1,9 @@
-import 'dart:io';
 import 'dart:math';
 import 'package:bloc/bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:meta/meta.dart';
 import 'dart:convert';
+import 'package:http/http.dart' as http;
 part 'map_event.dart';
 part 'map_state.dart';
 
@@ -39,9 +39,7 @@ class MapBloc extends Bloc<MapEvent, MapState> {
       var end = stringToBase64.decode('c2NhbGU9MSZsYW5nPXJ1X1JV');
       String url = "$start&x=${result.$1}&y=${result.$2}&z=${zoom.floor()}&$end";
 
-      HttpClient httpClient = HttpClient();
-      var request = await httpClient.getUrl(Uri.parse(url));
-      var response = await request.close();
+      final http.Response response = await http.post(Uri.parse(url));
       if(response.statusCode == 200) {
         emit(MapCalculated(result.$1, result.$2, url));
       }
