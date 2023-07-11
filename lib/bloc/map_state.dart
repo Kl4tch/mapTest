@@ -4,6 +4,7 @@ part of 'map_bloc.dart';
 sealed class MapState {}
 
 class MapInitial extends MapState {}
+class MapLoading extends MapState {}
 class MapCalculated extends MapState {
   MapCalculated(this.x, this.y, this.url);
 

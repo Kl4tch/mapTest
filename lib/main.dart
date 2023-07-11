@@ -4,13 +4,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:untitled/bloc/map_bloc.dart';
 
 void main() {
-  // input: https://yandex.ru/maps/geo/moskva/53166393/?l=carparks&ll=37.617747%2C55.786889&z=16
-  // out = https://core-carparks-renderer-lots.maps.yandex.net/maps-rdr-carparks/tiles?l=carparks&x=316898&y=164368&z=19&scale=1&lang=ru_RU
-
-  // input: lat = 55.786889, lng = 37.617747, z = 16
-  // out = x=316898, y=164368
-  // final bloc = MapBloc();
-  // print(bloc.getTile(Input(55.786889, 37.617747, 16)));
   runApp(const AppWidget());
 }
 
@@ -46,7 +39,8 @@ class WindowWidget extends StatelessWidget {
               return switch (state) {
                 MapInitial _ => const _FormWidget(),
                 MapCalculated s => _CalculatedWidget(state: s),
-                MapError e => _ErrorWidget(state: e)
+                MapError e => _ErrorWidget(state: e),
+                MapLoading _ => const Center(child: CircularProgressIndicator())
               };
             }
         )
@@ -80,13 +74,8 @@ class _ErrorWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
+        const _FormWidget(),
         Text(state.title),
-        FilledButton(
-          onPressed: () {
-            context.read<MapBloc>().add(DismissEvent());
-          },
-          child: const Text('Ок'),
-        )
       ],
     );
   }
@@ -100,51 +89,51 @@ class _FormWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     final bloc = context.read<MapBloc>();
     return SizedBox(
-            width: 300,
-            child: Card(
-                child: Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Form(
-                        child: Column(children: [
-                          TextFormField(
-                            decoration: getInputDecorator('Lat'),
-                            controller: bloc.latC,
-                            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                            inputFormatters: [FilteringTextInputFormatter.allow(RegExp('[0-9.,]')),],
-                            onFieldSubmitted: (input) {
-
-                            },
-                          ),
-                          TextFormField(
-                            decoration: getInputDecorator('Lng'),
-                            controller: bloc.lngC,
-                            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                            inputFormatters: [FilteringTextInputFormatter.allow(RegExp('[0-9.,]')),],
-                            onFieldSubmitted: (input) {
-
-                            },
-                          ),
-                          TextFormField(
-                            decoration: getInputDecorator('zoom'),
-                            controller: bloc.zoomC,
-                            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                            inputFormatters: [FilteringTextInputFormatter.allow(RegExp('[0-9.,]')),],
-                            onFieldSubmitted: (input) {
-
-                            },
-                          ),
-                          const SizedBox(height: 20),
-                          FilledButton(
-                            onPressed: () {
-                              bloc.add(StartEvent());
-                            },
-                            child: const Text('Start'),
-                          )
-                        ]
-                        )
+      width: 300,
+      child: Card(
+          child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Form(
+                  child: Column(children: [
+                    TextFormField(
+                      decoration: getInputDecorator('Lat'),
+                      controller: bloc.latC,
+                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      inputFormatters: [FilteringTextInputFormatter.allow(RegExp('[0-9.,]')),],
+                      onFieldSubmitted: (input) {
+                        bloc.add(StartEvent());
+                      },
+                    ),
+                    TextFormField(
+                      decoration: getInputDecorator('Lng'),
+                      controller: bloc.lngC,
+                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      inputFormatters: [FilteringTextInputFormatter.allow(RegExp('[0-9.,]')),],
+                      onFieldSubmitted: (input) {
+                        bloc.add(StartEvent());
+                      },
+                    ),
+                    TextFormField(
+                      decoration: getInputDecorator('zoom'),
+                      controller: bloc.zoomC,
+                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      inputFormatters: [FilteringTextInputFormatter.allow(RegExp('[0-9.,]')),],
+                      onFieldSubmitted: (input) {
+                        bloc.add(StartEvent());
+                      },
+                    ),
+                    const SizedBox(height: 20),
+                    FilledButton(
+                      onPressed: () {
+                        bloc.add(StartEvent());
+                      },
+                      child: const Text('Start'),
                     )
-                )
-            )
+                  ]
+                  )
+              )
+          )
+      )
         );
   }
 }

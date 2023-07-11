@@ -1,11 +1,12 @@
-import 'dart:async';
-import 'dart:math' as mp;
+import 'dart:io';
+import 'dart:math';
 import 'package:bloc/bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:meta/meta.dart';
-
+import 'dart:convert';
 part 'map_event.dart';
 part 'map_state.dart';
+
 
 class MapBloc extends Bloc<MapEvent, MapState> {
   MapBloc() : super(MapInitial()) {
@@ -18,50 +19,61 @@ class MapBloc extends Bloc<MapEvent, MapState> {
     });
   }
 
-
   final latC = TextEditingController();
   final lngC = TextEditingController();
   final zoomC = TextEditingController();
 
-
-  void start() {
+  Future<void> start() async {
     try {
       final double lat = double.parse(latC.text);
       final double lng = double.parse(lngC.text);
       final double zoom = double.parse(zoomC.text);
 
       final input = Input(lat, lng, zoom);
-      (int x, int y) result = _getTile(input);
+      var pixels = _fromGeoToPixels(input.lat, input.lng, input.zoom);
+      var tiles = _fromPixelsToTileNumber(pixels[0], pixels[1]);
+      (int x, int y) result = (tiles.$1, tiles.$2);
 
-      String url = "https://core-carparks-renderer-lots.maps.yandex.net/maps-rdr-carparks/tiles?l=carparks&x=${result.$1}&y=${result.$2}&z=$zoom&scale=1&lang=ru_RU";
-      // String url = "https://core-carparks-renderer-lots.maps.yandex.net/maps-rdr-carparks/tiles?l=carparks&x=316898&y=164368&z=19&scale=1&lang=ru_RU";
+      Codec<String, String> stringToBase64 = utf8.fuse(base64);
+      var start = stringToBase64.decode("aHR0cHM6Ly9jb3JlLWNhcnBhcmtzLXJlbmRlcmVyLWxvdHMubWFwcy55YW5kZXgubmV0L21hcHMtcmRyLWNhcnBhcmtzL3RpbGVzP2w9Y2FycGFya3M=");
+      var end = stringToBase64.decode('c2NhbGU9MSZsYW5nPXJ1X1JV');
+      String url = "$start&x=${result.$1}&y=${result.$2}&z=${zoom.floor()}&$end";
 
-      emit(MapCalculated(result.$1, result.$2, url));
+      HttpClient httpClient = HttpClient();
+      var request = await httpClient.getUrl(Uri.parse(url));
+      var response = await request.close();
+      if(response.statusCode == 200) {
+        emit(MapCalculated(result.$1, result.$2, url));
+      }
+      else {
+        emit(MapError("Не найдено"));
+      }
     }
     catch (e) {
       emit(MapError(e.toString()));
     }
   }
 
-  void test() {
-    final input = Input(55.786889, 37.617747, 16);
-    print(_getTile(input));
+
+  (int x, int y) _fromPixelsToTileNumber (int x, int y) {
+    return ((x / 256).floor(),
+      (y / 256).floor()
+    );
   }
 
-  (int x, int y) _getTile(Input input) {
-    double latRad = _degreeToRadian(input.lat);
-    num n = mp.pow(2.0, input.zoom);
+  List<int> _fromGeoToPixels(double lat, double long, double z) {
+    var e = 0.0818191908426;
 
-    int xTile = (n * ((input.lng + 180.0) / 360.0)).floor();
-    int yTile = ((1.0 - mp.log(mp.tan(latRad) + 1.0 / mp.cos(latRad)) / mp.pi) / 2.0 * n).floor();
+    double rho = pow(2, z + 8) / 2;
+    double beta = lat * pi / 180;
+    double phi = (1 - e * sin(beta)) / (1 + e * sin(beta));
+    double theta = tan(pi / 4 + beta / 2) * pow(phi, e / 2);
 
-    return (xTile, yTile);
+    int xP = (rho * (1 + long / 180)).floor();
+    int yP = (rho * (1 - log(theta) / pi)).floor();
+
+    return [xP, yP];
   }
-
-  double _degreeToRadian(double degree) {
-    return degree * (mp.pi / 180);
-  }
-
 }
 
 class Input {
